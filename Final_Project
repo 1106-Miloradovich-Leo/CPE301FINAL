@@ -1,0 +1,74 @@
+#include <avr/io.h> 
+#include <LiquidCrystal_I2C.h>
+#include <DHT.h>
+
+#define DHTPIN 10
+#define DHTTYPE DHT11
+
+int resval = 0; // holds the value
+int respin = A5; // Sensor pin used
+int RedLight = 6;
+int button = 8
+
+DHT dht(DHTPIN, DHTTYPE);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup(){
+  Serial.begin(9600);
+  //set buzzer to output
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+
+  lcd.init();
+  lcd.clear();
+  lcd.backlight();
+
+  dht.begin();
+}
+
+void loop(){
+
+  if(digitalread(button) == 0){
+    resval = analogRead(respin); //Read data from analog pin and store it to resval variable
+    if(resval<=100){
+      //Empty set buzzer to HIGH
+      digitalWrite(6, HIGH);
+      digitalWrite(7, HIGH);
+    }
+    else if(resval>100 && resval<=300){
+      //Low set buzzer to HIGH
+      digitalWrite(6, HIGH);
+      digitalWrite(7, HIGH);
+    }
+    else if(resval>300 && resval<330){
+      //Medium set buzzer to LOW
+      digitalWrite(6, LOW);
+      digitalWrite(7, LOW);
+    }
+    else if(resval>330){
+      //High set buzzer to LOW
+      digitalWrite(6, LOW);
+      digitalWrite(7, LOW);
+    }
+    delay(1000);
+
+    float h = dht.readHumidity();
+    float t = dht.readTemperature(true);
+
+    if(isnan(h) || isnan(t)){
+      lcd.setCursor(0,0);
+      lcd.print("Failed to read");
+    }
+
+    lcd.setCursor(0, 0);
+    lcd.print("Humi: ");
+    lcd.print(h);
+    lcd.print("%    ");
+
+    lcd.setCursor(0, 1);
+    lcd.print("Temp: ");
+    lcd.print(t);
+    lcd.print((char)223);
+    lcd.print("C    ");
+  }
+}
