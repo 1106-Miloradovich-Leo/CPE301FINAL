@@ -33,7 +33,6 @@ void loop(){
 
   if(buttonState){
     switchs = !switchs;
-    delay(500);
   }
 
   if(switchs == false){
@@ -69,27 +68,30 @@ void loop(){
       lcd.setCursor(0,0);
       lcd.print("Failed to read");
     }
+    else{
+      //Set the cursor to be the top row starting from the left side of the screen
+      lcd.setCursor(0, 0);
+      //What the row will say/have which in this case is the Humidity
+      lcd.print("Humi: ");
+      lcd.print(h);
+      lcd.print("%    ");
+      //Set the cursor to be the second/bottom row starting for the left side of the screen
+      lcd.setCursor(0, 1);
+      //What the row will say/have which in this case is the Temperature 
+      lcd.print("Temp: ");
+      lcd.print(t);
+      //using Char 223 for the symbol of degree
+      lcd.print((char)223);
+      lcd.print("C    ");
 
-    //Set the cursor to be the top row starting from the left side of the screen
-    lcd.setCursor(0, 0);
-    //What the row will say/have which in this case is the Humidity
-    lcd.print("Humi: ");
-    lcd.print(h);
-    lcd.print("%    ");
-    //Set the cursor to be the second/bottom row starting for the left side of the screen
-    lcd.setCursor(0, 1);
-    //What the row will say/have which in this case is the Temperature 
-    lcd.print("Temp: ");
-    lcd.print(t);
-    //using Char 223 for the symbol of degree
-    lcd.print((char)223);
-    lcd.print("C    ");
-
-    delay(1000);
+      delay(1000);
+    }
+    PORTH &= ~(1 << 6);
   }
   else{
     PORTH |= (1 << 6);
     PORTH &= ~(1 << 3);
     PORTH &= ~(1 << 4);
+    lcd.clear();
   }
 }
