@@ -29,69 +29,72 @@ void setup(){
 
 void loop(){
 
-  bool buttonState = (PINB & (1 << 4)) == 0;
-
-  if(buttonState){
-    switchs = !switchs;
-  }
-
-  if(switchs == false){
-    resval = analogRead(respin); //Read data from analog pin and store it to resval variable
-    if(resval<=100){
-      //Empty set buzzer to HIGH
-      PORTH |= (1 << 3);
-      PORTH |= (1 << 4);
-    }
-    else if(resval>100 && resval<=300){
-      //Low set buzzer to HIGH
-      PORTH |= (1 << 3);
-      PORTH |= (1 << 4);
-      }
-    else if(resval>300 && resval<330){
-      //Medium set buzzer to LOW
-      PORTH &= (1 << 3);
-      PORTH &= (1 << 4);
-    }
-    else if(resval>330){
-      //High set buzzer to LOW
-      PORTH &= (1 << 3);
-      PORTH &= (1 << 4);
-    }
-    delay(1000);
-
-    //Set and define what variable will be for Humidity and Temperature
-    float h = dht.readHumidity();
-    float t = dht.readTemperature(true);
-
-    //using isnan to determine if humidity or temp is not a number 
-    if(isnan(h) || isnan(t)){
-      lcd.setCursor(0,0);
-      lcd.print("Failed to read");
-    }
-    else{
-      //Set the cursor to be the top row starting from the left side of the screen
-      lcd.setCursor(0, 0);
-      //What the row will say/have which in this case is the Humidity
-      lcd.print("Humi: ");
-      lcd.print(h);
-      lcd.print("%    ");
-      //Set the cursor to be the second/bottom row starting for the left side of the screen
-      lcd.setCursor(0, 1);
-      //What the row will say/have which in this case is the Temperature 
-      lcd.print("Temp: ");
-      lcd.print(t);
-      //using Char 223 for the symbol of degree
-      lcd.print((char)223);
-      lcd.print("C    ");
-
-      delay(1000);
-    }
+  resval = analogRead(respin); //Read data from analog pin and store it to resval variable
+  if(resval<=100){
+    //Empty set buzzer to HIGH
+    PORTH |= (1 << 3);
+    PORTH |= (1 << 4);
     PORTH &= ~(1 << 6);
   }
-  else{
+  else if(resval>100 && resval<=300){
+    //Low set buzzer to HIGH
+    PORTH |= (1 << 3);
+    PORTH |= (1 << 4);
+    PORTH &= ~(1 << 6);
+    }
+  else if(resval>300 && resval<330){
+    //Medium set buzzer to LOW
+    PORTH &= (1 << 3);
+    PORTH &= (1 << 4);
     PORTH |= (1 << 6);
-    PORTH &= ~(1 << 3);
-    PORTH &= ~(1 << 4);
-    lcd.clear();
+  }
+  else if(resval>330){
+    //High set buzzer to LOW
+    PORTH &= (1 << 3);
+    PORTH &= (1 << 4);
+    PORTH |= (1 << 6);
+  }
+  
+  delay(1000);
+
+  //Set and define what variable will be for Humidity and Temperature
+  float h = dht.readHumidity();
+  float t = dht.readTemperature(true);
+
+  //using isnan to determine if humidity or temp is not a number 
+  if(isnan(h) || isnan(t)){
+    lcd.setCursor(0,0);
+    lcd.print("Failed to read");
+  }
+  else{
+    //Set the cursor to be the top row starting from the left side of the screen
+    lcd.setCursor(0, 0);
+
+    //What the row will say/have which in this case is the Humidity
+    lcd.print("Humi: ");
+    lcd.print(h);
+    lcd.print("%    ");
+
+    //Test to see if Humidity will print in the serial monitor
+    Serial.print("Humidity: ");
+    Serial.print(h);
+    Serial.print("\n");
+
+    //Set the cursor to be the second/bottom row starting for the left side of the screen
+    lcd.setCursor(0, 1);
+    
+    //What the row will say/have which in this case is the Temperature
+    lcd.print("Temp: ");
+    lcd.print(t);
+    //using Char 223 for the symbol of degree
+    lcd.print((char)223);
+    lcd.print("C    ");
+
+    //test to see if Temperature will print in serial monitor
+    Serial.print("Temperature: ");
+    Serial.print(t);
+    Serial.print("\n");
+
+    delay(1000);
   }
 }
