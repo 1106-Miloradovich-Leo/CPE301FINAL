@@ -22,9 +22,9 @@ void setup(){
   
   DDRB &= ~(1 << 4); //Pin input for the button
 
-  lcd.begin(16, 1);
+  lcd.begin(16, 2);//Startup for the LCD screen
 
-  dht.begin();
+  dht.begin(); //Start up for the DHT11 sensor 
 }
 
 void loop(){
