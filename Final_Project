@@ -1,5 +1,5 @@
 #include <avr/io.h> 
-#include <LiquidCrystal_I2C.h>
+#include <LiquidCrystal.h>
 #include <DHT.h>
 
 #define DHTPIN 10
@@ -7,88 +7,89 @@
 
 int resval = 0; // holds the value
 int respin = A5; // Sensor pin used
-int RedLight = 6; //defines the pin for the red light which will notify if there is less/low water
-int fanPin = 7; // the pin for the fan
-int button = 8; //on and off switch
-int yellowLight = 9; //defines the pin used for the yellow light which will notify that the system is off
+
 bool switchs = false; //a bool statement that will keep track of the button press for on and off
 
-DHT dht(DHTPIN, DHTTYPE);
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+DHT dht(8, DHT11);
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 void setup(){
   Serial.begin(9600);
   //set buzzer to output
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
-  pinMode(button, INPUT);
+  DDRH |= (1 << 3); //Pin output for the red light
+  DDRH |= (1 << 4); //Pin output for the fan
+  DDRH |= (1 << 6); //Pin outputfor the yellow light
+  
+  DDRB &= ~(1 << 4); //Pin input for the button
 
-  lcd.init();
-  lcd.clear();
-  lcd.backlight();
+  lcd.begin(16, 1);
 
   dht.begin();
 }
 
 void loop(){
 
-  if(digitalRead(button) == 0){
-    if(switchs == false){
-      resval = analogRead(respin); //Read data from analog pin and store it to resval variable
-      if(resval<=100){
-        //Empty set buzzer to HIGH
-        digitalWrite(6, HIGH);
-        digitalWrite(7, HIGH);
-      }
-      else if(resval>100 && resval<=300){
-        //Low set buzzer to HIGH
-        digitalWrite(6, HIGH);
-        digitalWrite(7, HIGH);
-      }
-      else if(resval>300 && resval<330){
-        //Medium set buzzer to LOW
-        digitalWrite(6, LOW);
-        digitalWrite(7, LOW);
-      }
-      else if(resval>330){
-        //High set buzzer to LOW
-        digitalWrite(6, LOW);
-        digitalWrite(7, LOW);
-      }
-      delay(1000);
+  bool buttonState = (PINB & (1 << 4)) == 0;
 
-      //Set and define what variable will be for Humidity and Temperature
-      float h = dht.readHumidity();
-      float t = dht.readTemperature(true);
+  if(buttonState){
+    switchs = !switchs;
+    delay(500);
+  }
 
-      //using isnan to determine if humidity or temp is not a number 
-      if(isnan(h) || isnan(t)){
-        lcd.setCursor(0,0);
-        lcd.print("Failed to read");
-      }
-
-      //Set the cursor to be the top row starting from the left side of the screen
-      lcd.setCursor(0, 0);
-      //What the row will say/have which in this case is the Humidity
-      lcd.print("Humi: ");
-      lcd.print(h);
-      lcd.print("%    ");
-
-      //Set the cursor to be the second/bottom row starting for the left side of the screen
-      lcd.setCursor(0, 1);
-      //What the row will say/have which in this case is the Temperature 
-      lcd.print("Temp: ");
-      lcd.print(t);
-      //using Char 223 for the symbol of degree
-      lcd.print((char)223);
-      lcd.print("C    ");
-      switchs = true;
-      delay(1000);
+  if(switchs == false){
+    resval = analogRead(respin); //Read data from analog pin and store it to resval variable
+    if(resval<=100){
+      //Empty set buzzer to HIGH
+      PORTH |= (1 << 3);
+      PORTH |= (1 << 4);
     }
-    else{
-      digitalWrite(yellowLight, HIGH);
-      switchs = false;
-      delay(1000);
+    else if(resval>100 && resval<=300){
+      //Low set buzzer to HIGH
+      PORTH |= (1 << 3);
+      PORTH |= (1 << 4);
+      }
+    else if(resval>300 && resval<330){
+      //Medium set buzzer to LOW
+      PORTH &= (1 << 3);
+      PORTH &= (1 << 4);
     }
+    else if(resval>330){
+      //High set buzzer to LOW
+      PORTH &= (1 << 3);
+      PORTH &= (1 << 4);
+    }
+    delay(1000);
+
+    //Set and define what variable will be for Humidity and Temperature
+    float h = dht.readHumidity();
+    float t = dht.readTemperature(true);
+
+    //using isnan to determine if humidity or temp is not a number 
+    if(isnan(h) || isnan(t)){
+      lcd.setCursor(0,0);
+      lcd.print("Failed to read");
+    }
+
+    //Set the cursor to be the top row starting from the left side of the screen
+    lcd.setCursor(0, 0);
+    //What the row will say/have which in this case is the Humidity
+    lcd.print("Humi: ");
+    lcd.print(h);
+    lcd.print("%    ");
+    //Set the cursor to be the second/bottom row starting for the left side of the screen
+    lcd.setCursor(0, 1);
+    //What the row will say/have which in this case is the Temperature 
+    lcd.print("Temp: ");
+    lcd.print(t);
+    //using Char 223 for the symbol of degree
+    lcd.print((char)223);
+    lcd.print("C    ");
+
+    delay(1000);
+  }
+  else{
+    PORTH |= (1 << 6);
+    PORTH &= ~(1 << 3);
+    PORTH &= ~(1 << 4);
   }
 }
